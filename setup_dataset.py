@@ -27,16 +27,21 @@ if not zip_files:
     raise FileNotFoundError("Zip archive not found after download")
 
 zip_path = zip_files[0]
-print(f"Found archive: {zip_path.name} ({zip_path.stat().st_size / 1024 / 1024:.1f} MB)")
+print(
+    f"Found archive: {zip_path.name} ({zip_path.stat().st_size / 1024 / 1024:.1f} MB)"
+)
 
 print("Searching for required files in archive...")
 with zipfile.ZipFile(zip_path, "r") as zf:
     all_names = zf.namelist()
 
-    jpg_entries = sorted([
-        n for n in all_names
-        if "0325updated.task1train" in n and n.lower().endswith(".jpg")
-    ])[:N]
+    jpg_entries = sorted(
+        [
+            n
+            for n in all_names
+            if "0325updated.task1train" in n and n.lower().endswith(".jpg")
+        ]
+    )[:N]
 
     if not jpg_entries:
         raise FileNotFoundError("No .jpg files found in task1train folder")
@@ -47,8 +52,11 @@ with zipfile.ZipFile(zip_path, "r") as zf:
     txt_entries = []
     for base in base_names:
         matches = [
-            n for n in all_names
-            if "0325updated.task2train" in n and Path(n).stem == base and n.lower().endswith(".txt")
+            n
+            for n in all_names
+            if "0325updated.task2train" in n
+            and Path(n).stem == base
+            and n.lower().endswith(".txt")
         ]
         if matches:
             txt_entries.append(matches[0])

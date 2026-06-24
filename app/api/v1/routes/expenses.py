@@ -18,7 +18,9 @@ def list_expenses(db: Session = Depends(get_db)):
 def get_expense(expense_id: int, db: Session = Depends(get_db)):
     expense = db.query(Expense).filter(Expense.id == expense_id).first()
     if not expense:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found"
+        )
     return expense
 
 
@@ -35,6 +37,8 @@ def create_expense(payload: ExpenseCreate, db: Session = Depends(get_db)):
 def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     expense = db.query(Expense).filter(Expense.id == expense_id).first()
     if not expense:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found"
+        )
     db.delete(expense)
     db.commit()
