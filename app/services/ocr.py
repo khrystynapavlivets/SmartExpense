@@ -57,6 +57,7 @@ def extract_with_vision(image_path: str) -> ExpenseCreate:
         response_model=ExpenseCreate,
     )
     result.image_path = image_path
+    print(f" Result function: {result}")
     return result
 
 

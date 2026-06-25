@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-
+from fastapi import UploadFile, File
 from app.core.database import get_db
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseRead
+from app.core.config import settings
+from app.services.ocr import extract_with_vision
+from pathlib import Path
+import uuid
 
 router = APIRouter()
 
@@ -27,6 +31,27 @@ def get_expense(expense_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=ExpenseRead, status_code=status.HTTP_201_CREATED)
 def create_expense(payload: ExpenseCreate, db: Session = Depends(get_db)):
     expense = Expense(**payload.model_dump())
+    db.add(expense)
+    db.commit()
+    db.refresh(expense)
+    return expense
+
+
+@router.post("/upload", response_model=ExpenseRead, status_code=status.HTTP_201_CREATED)
+async def upload_expense_receipt(
+    file: UploadFile = File(...), db: Session = Depends(get_db)
+):
+    settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    suffix = Path(file.filename).suffix
+    saved_path = settings.UPLOAD_DIR / f"{uuid.uuid4()}{suffix}"
+
+    contents = await file.read()
+    with open(saved_path, "wb") as f:
+        f.write(contents)
+
+    expense_data = extract_with_vision(str(saved_path))
+
+    expense = Expense(**expense_data.model_dump())
     db.add(expense)
     db.commit()
     db.refresh(expense)
