@@ -1,20 +1,8 @@
 import base64
 from pathlib import Path
-import instructor
-from groq import Groq
 
 from app.schemas.expense import ExpenseCreate
-
-# Lazy-initialized client — created on first use to avoid import-time failure
-_ai_client = None
-
-
-def _get_client():
-    global _ai_client
-    if _ai_client is None:
-        _ai_client = instructor.from_groq(Groq(), mode=instructor.Mode.JSON)
-    return _ai_client
-
+from app.services.ai_base import get_ai_client
 
 def _encode_image(image_path: str) -> str:
     """Read an image file and return its base64-encoded content."""
@@ -39,7 +27,7 @@ def extract_with_vision(image_path: str) -> ExpenseCreate:
     )
 
     # instructor parses the model response directly into ExpenseCreate via JSON mode
-    result = _get_client().chat.completions.create(
+    result = get_ai_client().chat.completions.create(
         model="meta-llama/llama-4-scout-17b-16e-instruct",
         messages=[
             {
@@ -57,7 +45,6 @@ def extract_with_vision(image_path: str) -> ExpenseCreate:
         response_model=ExpenseCreate,
     )
     result.image_path = image_path
-    print(f" Result function: {result}")
     return result
 
 
