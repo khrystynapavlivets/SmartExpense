@@ -7,8 +7,10 @@ from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseRead
 from app.core.config import settings
 from app.services.ocr import extract_with_vision
+from app.services.classifier import classify_document
 from pathlib import Path
 import uuid
+import os
 
 router = APIRouter()
 
@@ -51,7 +53,18 @@ async def upload_expense_receipt(
 
     expense_data = extract_with_vision(str(saved_path))
 
-    expense = Expense(**expense_data.model_dump())
+    doc_type = classify_document(expense_data.raw_text)
+
+    if doc_type != "receipt":
+        os.remove(saved_path)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Uploaded document classified as '{doc_type}'. Only receipts are accepted.",
+        )
+
+    expense_data.document_type = doc_type
+
+    expense = Expense(**expense_data.model_dump(exclude={"items"}))
     db.add(expense)
     db.commit()
     db.refresh(expense)

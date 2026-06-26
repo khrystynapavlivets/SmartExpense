@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from app.api.v1.routes import expenses
 from app.core.database import Base, engine
+import app.models  # noqa: F401 — register all models with SQLAlchemy
 
 Base.metadata.create_all(bind=engine)
 
