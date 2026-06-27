@@ -1,30 +1,33 @@
 # SmartExpense
 
-A FastAPI-based REST API for processing receipts and tracking expenses. Receipts are parsed using an LLM vision pipeline (Groq) and stored in a PostgreSQL database.
+A FastAPI-based REST API for processing receipts and tracking expenses. Receipt images are sent to Groq's vision model (Llama 4 Scout) for OCR, parsed into structured data via `instructor`, classified by document type, and stored in PostgreSQL.
 
 ## Features
 
-- Upload and parse receipt images (vendor, total, date, address)
+- Upload and parse receipt images (vendor, total, date, address, line items)
+- Automatic document classification (receipt / taxi / invoice / utility bill)
 - CRUD API for expense records
-- PostgreSQL storage via SQLAlchemy
+- PostgreSQL storage via SQLAlchemy + Alembic migrations
 - Docker Compose setup for the database
 - Sample dataset downloader using the SROIE Kaggle dataset
 
 ## Tech Stack
 
-- **Python 3.12+**
+- **Python 3.14+**
 - **FastAPI** — web framework
 - **SQLAlchemy** — ORM
 - **PostgreSQL** — database
-- **LangChain + Groq** — LLM vision model for receipt parsing
+- **Groq** — LLM API (Llama 4 Scout for vision OCR, Llama 3.1 8B for classification)
+- **instructor** — structured output parsing from LLM responses
 - **Pillow** — image loading
+- **Alembic** — database migrations
 - **Docker Compose** — local database
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.14+
 - PostgreSQL running locally or via Docker
 - Groq API key
 - Kaggle API token (for sample dataset)
@@ -78,7 +81,8 @@ Requires a valid Kaggle API token set in `.env`.
 | GET | `/health` | Health check |
 | GET | `/api/v1/expenses/` | List all expenses |
 | GET | `/api/v1/expenses/{id}` | Get expense by ID |
-| POST | `/api/v1/expenses/` | Create expense |
+| POST | `/api/v1/expenses/` | Create expense manually |
+| POST | `/api/v1/expenses/upload` | Upload receipt image → OCR → classify → save |
 | DELETE | `/api/v1/expenses/{id}` | Delete expense |
 
 ## Environment Variables

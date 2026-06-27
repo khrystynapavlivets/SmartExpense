@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from app.services.ai_base import get_ai_client
+from app.core.config import settings
 
 
 class DocumentClassification(BaseModel):
@@ -22,7 +23,7 @@ determine what type of document it is and return exactly one of these values:
 
 def classify_document(raw_text: str) -> str:
     result = get_ai_client().chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model=settings.GROQ_CLASSIFIER_MODEL,
         messages=[
             {"role": "system", "content": PROMPT},
             {"role": "user", "content": raw_text},

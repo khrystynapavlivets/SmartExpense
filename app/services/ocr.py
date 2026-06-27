@@ -3,6 +3,7 @@ from pathlib import Path
 
 from app.schemas.expense import ExpenseCreate
 from app.services.ai_base import get_ai_client
+from app.core.config import settings
 
 def _encode_image(image_path: str) -> str:
     """Read an image file and return its base64-encoded content."""
@@ -22,13 +23,14 @@ def extract_with_vision(image_path: str) -> ExpenseCreate:
     prompt = (
         "You are a receipt parsing assistant. Look at this receipt image and extract "
         "structured data: vendor name, total amount as a number, date, address, "
-        "and raw_text (all text visible on the receipt transcribed as-is). "
-        "If any field is not present, set it to null."
+        "raw_text (all text visible on the receipt transcribed as-is), "
+        "and items (a list of individual line items, each with name, quantity, price, and amount). "
+        "If any field is not present, set it to null. If there are no line items, set items to []."
     )
 
     # instructor parses the model response directly into ExpenseCreate via JSON mode
     result = get_ai_client().chat.completions.create(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        model=settings.GROQ_VISION_MODEL,
         messages=[
             {
                 "role": "user",

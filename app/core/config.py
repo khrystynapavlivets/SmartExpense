@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me-in-production"
     UPLOAD_DIR: Path = BASE_DIR / "data" / "uploads"
 
+    GROQ_VISION_MODEL: str = "meta-llama/llama-4-scout-17b-16e-instruct"
+    GROQ_CLASSIFIER_MODEL: str = "llama-3.1-8b-instant"
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 

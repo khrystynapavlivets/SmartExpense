@@ -3,14 +3,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base, get_db
+from app.core.security import get_current_user, hash_password
 from app.main import app
 
-# StaticPool forces all sessions to reuse a single in-memory connection,
-# so tables created by create_all are visible to every session.
 engine = create_engine(
     "sqlite://",
     connect_args={"check_same_thread": False},
@@ -21,8 +19,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture
 def setup_db():
-    """Create all tables before each test, drop after."""
-    import app.models  # noqa: F401 — register Expense + ExpenseItem
+    import app.models  # noqa: F401
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
@@ -38,15 +35,28 @@ def db(setup_db):
 
 
 @pytest.fixture
-def client(db):
-    """TestClient with DB overridden to SQLite."""
+def test_user(db):
+    from app.models.user import User
+    user = User(email="test@example.com", hashed_password=hash_password("testpass"))
+    db.add(user)
+    db.flush()
+    return user
+
+
+@pytest.fixture
+def client(db, test_user):
+    """TestClient with DB and auth overridden."""
     def override_get_db():
         try:
             yield db
         finally:
             pass
 
+    def override_get_current_user():
+        return test_user
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
@@ -74,7 +84,6 @@ def created_expense(client, sample_expense_payload):
 
 @pytest.fixture
 def fake_image_file():
-    """Minimal valid JPEG bytes for upload tests."""
     jpeg_bytes = (
         b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
         b"\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t"
