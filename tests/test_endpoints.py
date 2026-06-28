@@ -126,7 +126,7 @@ def test_upload_receipt_success(client, mocker, fake_image_file):
     assert data["total"] == 42.0
 
 
-def test_upload_rejects_non_receipt(client, mocker, fake_image_file):
+def test_upload_accepts_non_receipt_documents(client, mocker, fake_image_file):
     mock_expense = ExpenseCreate(
         vendor="Kyivenergo",
         total=300.0,
@@ -139,8 +139,8 @@ def test_upload_rejects_non_receipt(client, mocker, fake_image_file):
         "/api/v1/expenses/upload",
         files={"file": ("bill.jpg", fake_image_file, "image/jpeg")},
     )
-    assert response.status_code == 400
-    assert "utility_bill" in response.json()["detail"]
+    assert response.status_code == 201
+    assert response.json()["document_type"] == "utility_bill"
 
 
 def test_upload_requires_file(client):

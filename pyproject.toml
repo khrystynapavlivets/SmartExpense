@@ -23,7 +23,7 @@ dependencies = [
     "sqlalchemy>=2.0.51",
     "uvicorn[standard]>=0.49.0",
     "python-jose[cryptography]>=3.3.0",
-    "passlib[bcrypt]>=1.7.4",
+    "bcrypt>=4.0.0",
     "email-validator>=2.0.0",
 ]
 
@@ -31,3 +31,6 @@ dependencies = [
 dev = [
     "pytest-mock>=3.15.1",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
