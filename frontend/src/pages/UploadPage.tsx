@@ -36,7 +36,7 @@ export default function UploadPage() {
       const expense = await expensesApi.upload(file)
       navigate(`/expenses/${expense.id}`)
     } catch (e: any) {
-      setError(e.response?.data?.detail ?? 'Помилка завантаження')
+      setError(e.response?.data?.detail ?? 'Upload failed')
     } finally {
       setLoading(false)
     }
@@ -44,7 +44,7 @@ export default function UploadPage() {
 
   return (
     <div className="p-6 max-w-lg mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Завантажити чек</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">Upload receipt</h1>
 
       {/* Drop zone */}
       <div
@@ -68,8 +68,8 @@ export default function UploadPage() {
         ) : (
           <>
             <div className="text-4xl mb-3">📄</div>
-            <p className="text-sm text-gray-600">Перетягніть файл або натисніть</p>
-            <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WEBP, PDF — до 10 MB</p>
+            <p className="text-sm text-gray-600">Drag & drop a file or click</p>
+            <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WEBP, PDF — up to 10 MB</p>
           </>
         )}
       </div>
@@ -92,7 +92,7 @@ export default function UploadPage() {
         disabled={!file || loading}
         className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-40 transition-colors"
       >
-        {loading ? '⏳ Розпізнаємо...' : 'Розпізнати та зберегти'}
+        {loading ? '⏳ Processing...' : 'Recognize & save'}
       </button>
     </div>
   )

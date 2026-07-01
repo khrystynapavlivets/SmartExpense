@@ -2,9 +2,9 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { clearTokens } from '../api/auth'
 
 const nav = [
-  { to: '/', label: 'Дашборд', icon: '📊' },
-  { to: '/expenses', label: 'Витрати', icon: '📋' },
-  { to: '/upload', label: 'Завантажити', icon: '📤' },
+  { to: '/', label: 'Dashboard', icon: '📊' },
+  { to: '/expenses', label: 'Expenses', icon: '📋' },
+  { to: '/upload', label: 'Upload', icon: '📤' },
 ]
 
 export default function Layout() {
@@ -48,7 +48,7 @@ export default function Layout() {
             onClick={logout}
             className="w-full text-left text-sm text-gray-400 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            Вийти
+            Log out
           </button>
         </div>
       </aside>

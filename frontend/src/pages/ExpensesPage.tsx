@@ -5,12 +5,12 @@ import { expensesApi } from '../api/expenses'
 
 const DOC_TYPES = ['', 'receipt', 'taxi', 'invoice', 'utility_bill', 'other']
 const DOC_TYPE_LABELS: Record<string, string> = {
-  '': 'Всі',
-  receipt: 'Чек',
-  taxi: 'Таксі',
-  invoice: 'Рахунок',
-  utility_bill: 'Комунальні',
-  other: 'Інше',
+  '': 'All',
+  receipt: 'Receipt',
+  taxi: 'Taxi',
+  invoice: 'Invoice',
+  utility_bill: 'Utility bill',
+  other: 'Other',
 }
 
 export default function ExpensesPage() {
@@ -33,12 +33,12 @@ export default function ExpensesPage() {
   return (
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Витрати</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Expenses</h1>
         <Link
           to="/upload"
           className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
         >
-          + Завантажити
+          + Upload
         </Link>
       </div>
 
@@ -46,7 +46,7 @@ export default function ExpensesPage() {
       <div className="flex flex-wrap gap-3">
         <input
           type="text"
-          placeholder="Пошук за назвою..."
+          placeholder="Search by vendor..."
           value={vendor}
           onChange={(e) => { setVendor(e.target.value); setPage(0) }}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 min-w-48"
@@ -65,15 +65,15 @@ export default function ExpensesPage() {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Завантаження...</div>
+          <div className="p-8 text-center text-gray-400 text-sm">Loading...</div>
         ) : expenses && expenses.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-left text-gray-500">
-                <th className="px-4 py-3 font-medium">Продавець</th>
-                <th className="px-4 py-3 font-medium">Дата</th>
-                <th className="px-4 py-3 font-medium">Тип</th>
-                <th className="px-4 py-3 font-medium text-right">Сума</th>
+                <th className="px-4 py-3 font-medium">Vendor</th>
+                <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">Type</th>
+                <th className="px-4 py-3 font-medium text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -81,7 +81,7 @@ export default function ExpensesPage() {
                 <tr key={e.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <Link to={`/expenses/${e.id}`} className="font-medium text-gray-900 hover:text-indigo-600">
-                      {e.vendor ?? 'Без назви'}
+                      {e.vendor ?? 'Untitled'}
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-gray-500">{e.date ?? e.created_at.slice(0, 10)}</td>
@@ -99,8 +99,8 @@ export default function ExpensesPage() {
           </table>
         ) : (
           <div className="p-8 text-center text-gray-400 text-sm">
-            Нічого не знайдено.{' '}
-            <Link to="/upload" className="text-indigo-600 hover:underline">Завантажте чек</Link>
+            Nothing found.{' '}
+            <Link to="/upload" className="text-indigo-600 hover:underline">Upload a receipt</Link>
           </div>
         )}
       </div>
@@ -112,15 +112,15 @@ export default function ExpensesPage() {
           disabled={page === 0}
           className="text-sm text-gray-500 hover:text-gray-800 disabled:opacity-30"
         >
-          ← Назад
+          ← Back
         </button>
-        <span className="text-xs text-gray-400">Сторінка {page + 1}</span>
+        <span className="text-xs text-gray-400">Page {page + 1}</span>
         <button
           onClick={() => setPage((p) => p + 1)}
           disabled={!expenses || expenses.length < limit}
           className="text-sm text-gray-500 hover:text-gray-800 disabled:opacity-30"
         >
-          Вперед →
+          Next →
         </button>
       </div>
     </div>
