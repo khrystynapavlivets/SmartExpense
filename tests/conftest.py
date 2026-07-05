@@ -7,7 +7,14 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base, get_db
 from app.core.security import get_current_user, hash_password
+from app.core.config import settings
 from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def isolated_upload_dir(tmp_path, monkeypatch):
+    """Prevent tests from writing receipt files into the real data/uploads folder."""
+    monkeypatch.setattr(settings, "UPLOAD_DIR", tmp_path)
 
 engine = create_engine(
     "sqlite://",
@@ -60,6 +67,30 @@ def client(db, test_user):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def auth_client(db):
+    """TestClient with only the DB overridden — real JWT auth flow is exercised."""
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def other_user(db):
+    from app.models.user import User
+    user = User(email="other@example.com", hashed_password=hash_password("otherpass"))
+    db.add(user)
+    db.flush()
+    return user
 
 
 @pytest.fixture
