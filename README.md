@@ -6,7 +6,7 @@ The React frontend provides a dashboard with spending analytics, a searchable ex
 
 ## Demo
 
-[![SmartExpense demo — click to watch](docs/thumbnail.png)](https://github.com/khrystynapavlivets/SmartExpense/releases/download/demo-v1/demo.mp4)
+<video src="https://github.com/user-attachments/assets/6fa6ac64-5fb3-4fd8-b40a-228b294916a9" controls width="100%"></video>
 
 ## Features
 
