@@ -55,4 +55,3 @@ class ExpenseSummary(BaseModel):
     total_count: int
     total_amount: float = Field(default=0.0)
     by_category: List[CategorySummary]
-

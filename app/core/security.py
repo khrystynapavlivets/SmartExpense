@@ -37,7 +37,9 @@ def create_refresh_token(user_id: int) -> str:
     return _create_token(user_id, timedelta(days=7))
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_current_user(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+):
     from app.models.user import User
 
     exc = HTTPException(
@@ -48,7 +50,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         user_id = int(payload["sub"])
-    except (JWTError, KeyError, ValueError):
+    except JWTError, KeyError, ValueError:
         raise exc
 
     user = db.query(User).filter(User.id == user_id, User.is_active.is_(True)).first()

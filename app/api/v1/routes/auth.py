@@ -18,10 +18,14 @@ from app.schemas.auth import RefreshRequest, TokenResponse, UserCreate, UserRead
 router = APIRouter()
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
+)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
+        )
 
     user = User(email=payload.email, hashed_password=hash_password(payload.password))
     db.add(user)
@@ -51,11 +55,15 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 
 @router.post("/refresh", response_model=TokenResponse)
 def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
-    exc = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+    exc = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+    )
     try:
-        data = jwt.decode(payload.refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
+        data = jwt.decode(
+            payload.refresh_token, settings.SECRET_KEY, algorithms=["HS256"]
+        )
         user_id = int(data["sub"])
-    except (JWTError, KeyError, ValueError):
+    except JWTError, KeyError, ValueError:
         raise exc
 
     user = db.query(User).filter(User.id == user_id, User.is_active.is_(True)).first()

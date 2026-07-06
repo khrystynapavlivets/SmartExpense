@@ -5,6 +5,7 @@ from app.schemas.expense import ExpenseCreate
 from app.services.ai_base import get_ai_client
 from app.core.config import settings
 
+
 def _encode_image(image_path: str) -> str:
     """Read an image file and return its base64-encoded content."""
     with open(image_path, "rb") as f:

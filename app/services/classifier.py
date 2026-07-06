@@ -33,5 +33,3 @@ def classify_document(raw_text: str) -> str:
     )
 
     return result.document_type
-
-

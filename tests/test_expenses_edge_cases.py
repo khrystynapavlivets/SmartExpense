@@ -5,10 +5,10 @@ import pytest
 from app.core.config import settings
 from app.schemas.expense import ExpenseCreate
 
-
 # ---------------------------------------------------------------------------
 # GET /api/v1/expenses/summary
 # ---------------------------------------------------------------------------
+
 
 def test_summary_empty(client):
     response = client.get("/api/v1/expenses/summary")
@@ -21,8 +21,14 @@ def test_summary_empty(client):
 
 def test_summary_aggregates_by_category(client, sample_expense_payload):
     client.post("/api/v1/expenses/", json=sample_expense_payload)
-    client.post("/api/v1/expenses/", json={**sample_expense_payload, "total": 10.0, "document_type": "taxi"})
-    client.post("/api/v1/expenses/", json={**sample_expense_payload, "total": 5.0, "document_type": "taxi"})
+    client.post(
+        "/api/v1/expenses/",
+        json={**sample_expense_payload, "total": 10.0, "document_type": "taxi"},
+    )
+    client.post(
+        "/api/v1/expenses/",
+        json={**sample_expense_payload, "total": 5.0, "document_type": "taxi"},
+    )
 
     response = client.get("/api/v1/expenses/summary")
     data = response.json()
@@ -38,6 +44,7 @@ def test_summary_aggregates_by_category(client, sample_expense_payload):
 # ---------------------------------------------------------------------------
 # PUT /api/v1/expenses/{id}
 # ---------------------------------------------------------------------------
+
 
 def test_update_expense_partial_fields(client, created_expense):
     response = client.put(
@@ -55,16 +62,21 @@ def test_update_expense_not_found(client):
 
 
 def test_update_expense_replaces_items(client, sample_expense_payload):
-    payload = {**sample_expense_payload, "items": [{"name": "Milk", "quantity": 1, "price": 2.0, "amount": 2.0}]}
+    payload = {
+        **sample_expense_payload,
+        "items": [{"name": "Milk", "quantity": 1, "price": 2.0, "amount": 2.0}],
+    }
     created = client.post("/api/v1/expenses/", json=payload).json()
     assert len(created["items"]) == 1
 
     update_response = client.put(
         f"/api/v1/expenses/{created['id']}",
-        json={"items": [
-            {"name": "Bread", "quantity": 2, "price": 1.5, "amount": 3.0},
-            {"name": "Eggs", "quantity": 1, "price": 4.0, "amount": 4.0},
-        ]},
+        json={
+            "items": [
+                {"name": "Bread", "quantity": 2, "price": 1.5, "amount": 3.0},
+                {"name": "Eggs", "quantity": 1, "price": 4.0, "amount": 4.0},
+            ]
+        },
     )
     assert update_response.status_code == 200
     data = update_response.json()
@@ -73,11 +85,18 @@ def test_update_expense_replaces_items(client, sample_expense_payload):
     assert names == {"Bread", "Eggs"}
 
 
-def test_update_expense_omits_items_key_keeps_existing_items(client, sample_expense_payload):
-    payload = {**sample_expense_payload, "items": [{"name": "Milk", "quantity": 1, "price": 2.0, "amount": 2.0}]}
+def test_update_expense_omits_items_key_keeps_existing_items(
+    client, sample_expense_payload
+):
+    payload = {
+        **sample_expense_payload,
+        "items": [{"name": "Milk", "quantity": 1, "price": 2.0, "amount": 2.0}],
+    }
     created = client.post("/api/v1/expenses/", json=payload).json()
 
-    response = client.put(f"/api/v1/expenses/{created['id']}", json={"vendor": "New Name"})
+    response = client.put(
+        f"/api/v1/expenses/{created['id']}", json={"vendor": "New Name"}
+    )
     assert response.status_code == 200
     assert len(response.json()["items"]) == 1
 
@@ -85,6 +104,7 @@ def test_update_expense_omits_items_key_keeps_existing_items(client, sample_expe
 # ---------------------------------------------------------------------------
 # GET /api/v1/expenses/{id}/image
 # ---------------------------------------------------------------------------
+
 
 def test_get_expense_image_success(client, sample_expense_payload):
     settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -128,9 +148,12 @@ def test_get_expense_image_rejects_path_traversal(client, sample_expense_payload
 # GET /api/v1/expenses/ filters
 # ---------------------------------------------------------------------------
 
+
 def test_list_expenses_filters_by_vendor(client, sample_expense_payload):
     client.post("/api/v1/expenses/", json=sample_expense_payload)
-    client.post("/api/v1/expenses/", json={**sample_expense_payload, "vendor": "Other Shop"})
+    client.post(
+        "/api/v1/expenses/", json={**sample_expense_payload, "vendor": "Other Shop"}
+    )
 
     response = client.get("/api/v1/expenses/", params={"vendor": "test"})
     data = response.json()
@@ -140,7 +163,9 @@ def test_list_expenses_filters_by_vendor(client, sample_expense_payload):
 
 def test_list_expenses_filters_by_document_type(client, sample_expense_payload):
     client.post("/api/v1/expenses/", json=sample_expense_payload)
-    client.post("/api/v1/expenses/", json={**sample_expense_payload, "document_type": "taxi"})
+    client.post(
+        "/api/v1/expenses/", json={**sample_expense_payload, "document_type": "taxi"}
+    )
 
     response = client.get("/api/v1/expenses/", params={"document_type": "taxi"})
     data = response.json()
@@ -153,7 +178,9 @@ def test_list_expenses_filters_by_total_range(client, sample_expense_payload):
     client.post("/api/v1/expenses/", json={**sample_expense_payload, "total": 50.0})
     client.post("/api/v1/expenses/", json={**sample_expense_payload, "total": 500.0})
 
-    response = client.get("/api/v1/expenses/", params={"min_total": 10, "max_total": 100})
+    response = client.get(
+        "/api/v1/expenses/", params={"min_total": 10, "max_total": 100}
+    )
     data = response.json()
     assert len(data) == 1
     assert data[0]["total"] == 50.0
@@ -162,6 +189,7 @@ def test_list_expenses_filters_by_total_range(client, sample_expense_payload):
 # ---------------------------------------------------------------------------
 # POST /api/v1/expenses/upload validation
 # ---------------------------------------------------------------------------
+
 
 def test_upload_rejects_unsupported_content_type(client, fake_image_file):
     response = client.post(
@@ -180,7 +208,9 @@ def test_upload_rejects_oversized_file(client):
     assert response.status_code == 413
 
 
-def test_upload_returns_502_and_cleans_up_file_on_extraction_failure(client, mocker, fake_image_file):
+def test_upload_returns_502_and_cleans_up_file_on_extraction_failure(
+    client, mocker, fake_image_file
+):
     mocker.patch(
         "app.api.v1.routes.expenses.extract_with_vision",
         side_effect=RuntimeError("vision API down"),

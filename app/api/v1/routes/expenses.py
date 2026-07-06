@@ -11,7 +11,13 @@ from app.core.security import get_current_user
 from app.models.expense import Expense
 from app.models.expense_item import ExpenseItem
 from app.models.user import User
-from app.schemas.expense import ExpenseCreate, ExpenseRead, ExpenseUpdate, ExpenseSummary, CategorySummary
+from app.schemas.expense import (
+    ExpenseCreate,
+    ExpenseRead,
+    ExpenseUpdate,
+    ExpenseSummary,
+    CategorySummary,
+)
 from app.core.config import settings
 from app.services.ocr import extract_with_vision
 from app.services.classifier import classify_document
@@ -33,7 +39,11 @@ def list_expenses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    query = db.query(Expense).options(selectinload(Expense.items)).filter(Expense.user_id == current_user.id)
+    query = (
+        db.query(Expense)
+        .options(selectinload(Expense.items))
+        .filter(Expense.user_id == current_user.id)
+    )
     if vendor:
         query = query.filter(Expense.vendor.ilike(f"%{vendor}%"))
     if document_type:
@@ -50,10 +60,14 @@ def get_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    total_count, total_amount = db.query(
-        func.count(Expense.id),
-        func.coalesce(func.sum(Expense.total), 0.0),
-    ).filter(Expense.user_id == current_user.id).one()
+    total_count, total_amount = (
+        db.query(
+            func.count(Expense.id),
+            func.coalesce(func.sum(Expense.total), 0.0),
+        )
+        .filter(Expense.user_id == current_user.id)
+        .one()
+    )
 
     rows = (
         db.query(
@@ -82,11 +96,15 @@ def get_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    expense = db.query(Expense).filter(
-        Expense.id == expense_id, Expense.user_id == current_user.id
-    ).first()
+    expense = (
+        db.query(Expense)
+        .filter(Expense.id == expense_id, Expense.user_id == current_user.id)
+        .first()
+    )
     if not expense:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found"
+        )
     return expense
 
 
@@ -96,16 +114,22 @@ def get_expense_image(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    expense = db.query(Expense).filter(
-        Expense.id == expense_id, Expense.user_id == current_user.id
-    ).first()
+    expense = (
+        db.query(Expense)
+        .filter(Expense.id == expense_id, Expense.user_id == current_user.id)
+        .first()
+    )
     if not expense or not expense.image_path:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
+        )
 
     upload_dir = settings.UPLOAD_DIR.resolve()
     image_path = (settings.UPLOAD_DIR / expense.image_path).resolve()
     if not image_path.is_relative_to(upload_dir) or not image_path.is_file():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
+        )
 
     return FileResponse(image_path)
 
@@ -117,13 +141,19 @@ def update_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    expense = db.query(Expense).filter(
-        Expense.id == expense_id, Expense.user_id == current_user.id
-    ).first()
+    expense = (
+        db.query(Expense)
+        .filter(Expense.id == expense_id, Expense.user_id == current_user.id)
+        .first()
+    )
     if not expense:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found"
+        )
 
-    for field, value in payload.model_dump(exclude={"items"}, exclude_unset=True).items():
+    for field, value in payload.model_dump(
+        exclude={"items"}, exclude_unset=True
+    ).items():
         setattr(expense, field, value)
 
     if payload.items is not None:
@@ -196,7 +226,9 @@ async def upload_expense_receipt(
 
     expense_data.image_path = filename
 
-    expense = Expense(**expense_data.model_dump(exclude={"items"}), user_id=current_user.id)
+    expense = Expense(
+        **expense_data.model_dump(exclude={"items"}), user_id=current_user.id
+    )
     db.add(expense)
     db.flush()
 
@@ -214,11 +246,15 @@ def delete_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    expense = db.query(Expense).filter(
-        Expense.id == expense_id, Expense.user_id == current_user.id
-    ).first()
+    expense = (
+        db.query(Expense)
+        .filter(Expense.id == expense_id, Expense.user_id == current_user.id)
+        .first()
+    )
     if not expense:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found"
+        )
 
     if expense.image_path:
         (settings.UPLOAD_DIR / expense.image_path).unlink(missing_ok=True)

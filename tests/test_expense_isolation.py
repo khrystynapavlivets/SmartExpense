@@ -21,7 +21,10 @@ def other_users_expense(db, other_user):
 # Isolation: current user (test_user) must not see other_user's data
 # ---------------------------------------------------------------------------
 
-def test_list_expenses_excludes_other_users_expenses(client, other_users_expense, created_expense):
+
+def test_list_expenses_excludes_other_users_expenses(
+    client, other_users_expense, created_expense
+):
     response = client.get("/api/v1/expenses/")
     assert response.status_code == 200
     data = response.json()
@@ -51,7 +54,9 @@ def test_image_404s_for_other_users_expense(client, other_users_expense):
     assert response.status_code == 404
 
 
-def test_summary_excludes_other_users_expenses(client, other_users_expense, created_expense):
+def test_summary_excludes_other_users_expenses(
+    client, other_users_expense, created_expense
+):
     response = client.get("/api/v1/expenses/summary")
     assert response.status_code == 200
     data = response.json()

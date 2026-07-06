@@ -8,7 +8,9 @@ class ExpenseItem(Base):
     __tablename__ = "expense_items"
 
     id = Column(Integer, primary_key=True, index=True)
-    expense_id = Column(Integer, ForeignKey("expenses.id", ondelete="CASCADE"), nullable=False)
+    expense_id = Column(
+        Integer, ForeignKey("expenses.id", ondelete="CASCADE"), nullable=False
+    )
     name = Column(String(255), nullable=True)
     quantity = Column(Float, nullable=True)
     price = Column(Float, nullable=True)

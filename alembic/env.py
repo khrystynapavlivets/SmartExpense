@@ -6,7 +6,7 @@ from alembic import context
 
 from app.core.config import settings
 from app.core.database import Base
-import app.models.expense       # noqa: F401 — register Expense model
+import app.models.expense  # noqa: F401 — register Expense model
 import app.models.expense_item  # noqa: F401 — register ExpenseItem model
 
 config = context.config

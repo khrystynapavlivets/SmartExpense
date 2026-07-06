@@ -12,10 +12,10 @@ from app.core.security import (
     verify_password,
 )
 
-
 # ---------------------------------------------------------------------------
 # Password hashing
 # ---------------------------------------------------------------------------
+
 
 def test_hash_password_round_trip():
     hashed = hash_password("supersecret")
@@ -35,6 +35,7 @@ def test_hash_password_produces_different_hashes_each_time():
 # ---------------------------------------------------------------------------
 # Token creation
 # ---------------------------------------------------------------------------
+
 
 def test_create_access_token_contains_subject_and_expiry():
     token = create_access_token(42)
@@ -67,6 +68,7 @@ def test_expired_access_token_fails_decode_after_expiry():
 # get_current_user
 # ---------------------------------------------------------------------------
 
+
 def test_get_current_user_returns_user_for_valid_token(db, test_user):
     token = create_access_token(test_user.id)
     user = get_current_user(token=token, db=db)
@@ -81,7 +83,10 @@ def test_get_current_user_rejects_malformed_token(db):
 
 def test_get_current_user_rejects_token_with_wrong_signature(db, test_user):
     bad_token = jwt.encode(
-        {"sub": str(test_user.id), "exp": datetime.now(timezone.utc) + timedelta(minutes=5)},
+        {
+            "sub": str(test_user.id),
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+        },
         "wrong-secret-key",
         algorithm="HS256",
     )

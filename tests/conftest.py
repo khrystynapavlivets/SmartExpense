@@ -16,6 +16,7 @@ def isolated_upload_dir(tmp_path, monkeypatch):
     """Prevent tests from writing receipt files into the real data/uploads folder."""
     monkeypatch.setattr(settings, "UPLOAD_DIR", tmp_path)
 
+
 engine = create_engine(
     "sqlite://",
     connect_args={"check_same_thread": False},
@@ -27,6 +28,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture
 def setup_db():
     import app.models  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
@@ -44,6 +46,7 @@ def db(setup_db):
 @pytest.fixture
 def test_user(db):
     from app.models.user import User
+
     user = User(email="test@example.com", hashed_password=hash_password("testpass"))
     db.add(user)
     db.flush()
@@ -53,6 +56,7 @@ def test_user(db):
 @pytest.fixture
 def client(db, test_user):
     """TestClient with DB and auth overridden."""
+
     def override_get_db():
         try:
             yield db
@@ -72,6 +76,7 @@ def client(db, test_user):
 @pytest.fixture
 def auth_client(db):
     """TestClient with only the DB overridden — real JWT auth flow is exercised."""
+
     def override_get_db():
         try:
             yield db
@@ -87,6 +92,7 @@ def auth_client(db):
 @pytest.fixture
 def other_user(db):
     from app.models.user import User
+
     user = User(email="other@example.com", hashed_password=hash_password("otherpass"))
     db.add(user)
     db.flush()

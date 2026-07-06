@@ -5,10 +5,10 @@ from jose import jwt
 from app.core.config import settings
 from app.core.security import create_refresh_token, hash_password
 
-
 # ---------------------------------------------------------------------------
 # POST /auth/register
 # ---------------------------------------------------------------------------
+
 
 def test_register_creates_user_and_returns_tokens(auth_client):
     response = auth_client.post(
@@ -40,6 +40,7 @@ def test_register_rejects_invalid_email(auth_client):
 # POST /auth/login
 # ---------------------------------------------------------------------------
 
+
 def test_login_success_returns_tokens(auth_client, test_user):
     response = auth_client.post(
         "/auth/login", data={"username": test_user.email, "password": "testpass"}
@@ -69,6 +70,7 @@ def test_login_rejects_unknown_email(auth_client):
 # POST /auth/refresh
 # ---------------------------------------------------------------------------
 
+
 def test_refresh_returns_new_tokens(auth_client, test_user):
     refresh_token = create_refresh_token(test_user.id)
     response = auth_client.post("/auth/refresh", json={"refresh_token": refresh_token})
@@ -86,7 +88,10 @@ def test_refresh_rejects_invalid_token(auth_client):
 
 def test_refresh_rejects_expired_token(auth_client, test_user):
     expired = jwt.encode(
-        {"sub": str(test_user.id), "exp": datetime.now(timezone.utc) - timedelta(days=1)},
+        {
+            "sub": str(test_user.id),
+            "exp": datetime.now(timezone.utc) - timedelta(days=1),
+        },
         settings.SECRET_KEY,
         algorithm="HS256",
     )
@@ -112,6 +117,7 @@ def test_refresh_rejects_inactive_user(auth_client, test_user, db):
 # GET /auth/me
 # ---------------------------------------------------------------------------
 
+
 def test_me_returns_current_user_with_valid_token(auth_client, test_user):
     login_response = auth_client.post(
         "/auth/login", data={"username": test_user.email, "password": "testpass"}
@@ -133,7 +139,5 @@ def test_me_rejects_missing_token(auth_client):
 
 
 def test_me_rejects_invalid_token(auth_client):
-    response = auth_client.get(
-        "/auth/me", headers={"Authorization": "Bearer garbage"}
-    )
+    response = auth_client.get("/auth/me", headers={"Authorization": "Bearer garbage"})
     assert response.status_code == 401
