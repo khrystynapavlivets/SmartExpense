@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Save, Pencil, Trash2 } from 'lucide-react'
 import { expensesApi } from '../api/expenses'
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -19,6 +21,43 @@ export default function ExpenseDetailPage() {
     queryKey: ['expense', id],
     queryFn: () => expensesApi.get(Number(id)),
   })
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [isImageError, setIsImageError] = useState(false)
+  const [isImageFetching, setIsImageFetching] = useState(false)
+  const [imageRetry, setImageRetry] = useState(0)
+
+  useEffect(() => {
+    if (!expense?.image_path) return
+    let cancelled = false
+    let blobUrl: string | null = null
+
+    setIsImageFetching(true)
+    setIsImageError(false)
+
+    expensesApi.imageUrl(Number(id))
+      .then((url) => {
+        blobUrl = url
+        if (!cancelled) {
+          setImageUrl(url)
+          setIsImageFetching(false)
+        } else {
+          URL.revokeObjectURL(url)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsImageError(true)
+          setIsImageFetching(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+      if (blobUrl) URL.revokeObjectURL(blobUrl)
+      setImageUrl(null)
+    }
+  }, [expense?.image_path, id, imageRetry])
 
   const deleteMutation = useMutation({
     mutationFn: () => expensesApi.delete(Number(id)),
@@ -53,6 +92,34 @@ export default function ExpenseDetailPage() {
             </span>
           </div>
         </div>
+
+        {expense.image_path && imageUrl && (
+          <img
+            src={imageUrl}
+            alt="Receipt"
+            className="w-full max-h-96 object-contain rounded-xl border border-gray-100 bg-gray-50"
+          />
+        )}
+
+        {expense.image_path && !imageUrl && !isImageError && (
+          <div className="w-full h-48 flex items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-sm text-gray-400">
+            Loading image...
+          </div>
+        )}
+
+        {expense.image_path && isImageError && (
+          <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+            <p className="text-sm text-amber-700">Failed to load receipt image.</p>
+            <button
+              type="button"
+              onClick={() => setImageRetry((n) => n + 1)}
+              disabled={isImageFetching}
+              className="text-sm font-medium text-indigo-600 hover:underline disabled:opacity-40 shrink-0"
+            >
+              {isImageFetching ? 'Loading...' : 'Try again'}
+            </button>
+          </div>
+        )}
 
         {expense.address && (
           <div>
@@ -102,15 +169,32 @@ export default function ExpenseDetailPage() {
         )}
       </div>
 
-      <button
-        onClick={() => {
-          if (confirm('Delete this record?')) deleteMutation.mutate()
-        }}
-        disabled={deleteMutation.isPending}
-        className="text-red-500 hover:text-red-700 text-sm disabled:opacity-40"
-      >
-        {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate('/expenses')}
+          className="flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+        >
+          <Save size={16} />
+          Save
+        </button>
+        <button
+          onClick={() => navigate(`/expenses/${id}/edit`)}
+          className="flex items-center gap-1.5 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          <Pencil size={16} />
+          Edit
+        </button>
+        <button
+          onClick={() => {
+            if (confirm('Delete this record?')) deleteMutation.mutate()
+          }}
+          disabled={deleteMutation.isPending}
+          className="flex items-center gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 ml-auto"
+        >
+          <Trash2 size={16} />
+          {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+        </button>
+      </div>
     </div>
   )
 }

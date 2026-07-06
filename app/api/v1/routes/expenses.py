@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from sqlalchemy.orm import Session
+from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func
 from typing import List, Optional
 from pathlib import Path
@@ -32,7 +33,7 @@ def list_expenses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    query = db.query(Expense).filter(Expense.user_id == current_user.id)
+    query = db.query(Expense).options(selectinload(Expense.items)).filter(Expense.user_id == current_user.id)
     if vendor:
         query = query.filter(Expense.vendor.ilike(f"%{vendor}%"))
     if document_type:
@@ -87,6 +88,26 @@ def get_expense(
     if not expense:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
     return expense
+
+
+@router.get("/{expense_id}/image")
+def get_expense_image(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    expense = db.query(Expense).filter(
+        Expense.id == expense_id, Expense.user_id == current_user.id
+    ).first()
+    if not expense or not expense.image_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
+
+    upload_dir = settings.UPLOAD_DIR.resolve()
+    image_path = (settings.UPLOAD_DIR / expense.image_path).resolve()
+    if not image_path.is_relative_to(upload_dir) or not image_path.is_file():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
+
+    return FileResponse(image_path)
 
 
 @router.put("/{expense_id}", response_model=ExpenseRead)
@@ -157,15 +178,23 @@ async def upload_expense_receipt(
 
     settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     suffix = Path(file.filename).suffix
-    saved_path = settings.UPLOAD_DIR / f"{uuid.uuid4()}{suffix}"
+    filename = f"{uuid.uuid4()}{suffix}"
+    saved_path = settings.UPLOAD_DIR / filename
 
     with open(saved_path, "wb") as f:
         f.write(contents)
 
-    expense_data = extract_with_vision(str(saved_path))
+    try:
+        expense_data = extract_with_vision(str(saved_path))
+        expense_data.document_type = classify_document(expense_data.raw_text)
+    except Exception as exc:
+        saved_path.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to process the receipt image. Please try again.",
+        ) from exc
 
-    doc_type = classify_document(expense_data.raw_text)
-    expense_data.document_type = doc_type
+    expense_data.image_path = filename
 
     expense = Expense(**expense_data.model_dump(exclude={"items"}), user_id=current_user.id)
     db.add(expense)
@@ -190,5 +219,9 @@ def delete_expense(
     ).first()
     if not expense:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+
+    if expense.image_path:
+        (settings.UPLOAD_DIR / expense.image_path).unlink(missing_ok=True)
+
     db.delete(expense)
     db.commit()

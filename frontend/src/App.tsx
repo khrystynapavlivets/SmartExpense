@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import ExpensesPage from './pages/ExpensesPage'
 import ExpenseDetailPage from './pages/ExpenseDetailPage'
+import ExpenseEditPage from './pages/ExpenseEditPage'
 import UploadPage from './pages/UploadPage'
 
 const queryClient = new QueryClient({
@@ -32,6 +33,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="expenses" element={<ExpensesPage />} />
             <Route path="expenses/:id" element={<ExpenseDetailPage />} />
+            <Route path="expenses/:id/edit" element={<ExpenseEditPage />} />
             <Route path="upload" element={<UploadPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

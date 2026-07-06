@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { expensesApi } from '../api/expenses'
 
 export default function UploadPage() {
@@ -10,6 +11,7 @@ export default function UploadPage() {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const handleFile = (f: File) => {
     setFile(f)
@@ -34,6 +36,8 @@ export default function UploadPage() {
     setError('')
     try {
       const expense = await expensesApi.upload(file)
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['summary'] })
       navigate(`/expenses/${expense.id}`)
     } catch (e: any) {
       setError(e.response?.data?.detail ?? 'Upload failed')
@@ -92,7 +96,7 @@ export default function UploadPage() {
         disabled={!file || loading}
         className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-40 transition-colors"
       >
-        {loading ? '⏳ Processing...' : 'Recognize & save'}
+        {loading ? '⏳ Recognizing...' : 'Recognize'}
       </button>
     </div>
   )

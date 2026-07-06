@@ -51,6 +51,9 @@ export const expensesApi = {
   delete: (id: number) =>
     api.delete(`/api/v1/expenses/${id}`),
 
+  imageUrl: (id: number) =>
+    api.get(`/api/v1/expenses/${id}/image`, { responseType: 'blob' }).then((r) => URL.createObjectURL(r.data)),
+
   upload: (file: File) => {
     const form = new FormData()
     form.append('file', file)

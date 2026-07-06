@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from 'react-router-dom'
+import { Pencil, Trash2 } from 'lucide-react'
 import { expensesApi } from '../api/expenses'
 
 const DOC_TYPES = ['', 'receipt', 'taxi', 'invoice', 'utility_bill', 'other']
@@ -18,6 +19,8 @@ export default function ExpensesPage() {
   const [docType, setDocType] = useState('')
   const [page, setPage] = useState(0)
   const limit = 20
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { data: expenses, isLoading } = useQuery({
     queryKey: ['expenses', { vendor, docType, page }],
@@ -29,6 +32,20 @@ export default function ExpensesPage() {
         limit,
       }),
   })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => expensesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['summary'] })
+    },
+  })
+
+  const handleDelete = (id: number) => {
+    if (confirm('Delete this record? This action cannot be undone.')) {
+      deleteMutation.mutate(id)
+    }
+  }
 
   return (
     <div className="p-6 space-y-5">
@@ -74,6 +91,7 @@ export default function ExpensesPage() {
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Type</th>
                 <th className="px-4 py-3 font-medium text-right">Amount</th>
+                <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -92,6 +110,25 @@ export default function ExpensesPage() {
                   </td>
                   <td className="px-4 py-3 text-right font-semibold text-gray-900">
                     {e.total != null ? e.total.toFixed(2) : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => navigate(`/expenses/${e.id}/edit`)}
+                        title="Edit"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(e.id)}
+                        disabled={deleteMutation.isPending}
+                        title="Delete"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -4,7 +4,6 @@ import { clearTokens } from '../api/auth'
 const nav = [
   { to: '/', label: 'Dashboard', icon: '📊' },
   { to: '/expenses', label: 'Expenses', icon: '📋' },
-  { to: '/upload', label: 'Upload', icon: '📤' },
 ]
 
 export default function Layout() {
@@ -16,9 +15,9 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col sm:flex-row bg-gray-50">
+    <div className="h-screen flex flex-col sm:flex-row bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-full sm:w-56 bg-white border-b sm:border-b-0 sm:border-r border-gray-200 flex sm:flex-col justify-between">
+      <aside className="w-full sm:w-56 sm:h-full shrink-0 bg-white border-b sm:border-b-0 sm:border-r border-gray-200 flex sm:flex-col justify-between overflow-y-auto">
         <div>
           <div className="px-5 py-4 border-b border-gray-100">
             <span className="font-semibold text-gray-900 text-sm">SmartExpense</span>
@@ -54,7 +53,7 @@ export default function Layout() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
     </div>

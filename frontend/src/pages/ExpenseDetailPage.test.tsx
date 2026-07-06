@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { expensesApi, type Expense } from '../api/expenses'
@@ -22,6 +23,8 @@ const sampleExpense: Expense = {
   items: [{ name: 'Milk', quantity: 1, price: 2.5, amount: 2.5 }],
 }
 
+const sampleExpenseWithImage: Expense = { ...sampleExpense, image_path: 'receipt.jpg' }
+
 function renderDetailPage(id = '1') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -39,6 +42,7 @@ function renderDetailPage(id = '1') {
 describe('ExpenseDetailPage', () => {
   beforeEach(() => {
     vi.mocked(expensesApi.get).mockReset()
+    vi.mocked(expensesApi.imageUrl).mockReset()
   })
 
   it('renders expense details once loaded', async () => {
@@ -56,4 +60,45 @@ describe('ExpenseDetailPage', () => {
 
     expect(await screen.findByText('Not found')).toBeInTheDocument()
   })
+
+  it('shows a loading placeholder while the receipt image is being fetched', async () => {
+    vi.mocked(expensesApi.get).mockResolvedValue(sampleExpenseWithImage)
+    let resolveImage: (url: string) => void = () => {}
+    vi.mocked(expensesApi.imageUrl).mockReturnValue(
+      new Promise((resolve) => { resolveImage = resolve }),
+    )
+    renderDetailPage()
+
+    expect(await screen.findByText('Loading image...')).toBeInTheDocument()
+    expect(document.querySelector('img[alt="Receipt"]')).toBeNull()
+
+    resolveImage('blob:mock-url')
+
+    await waitFor(() => {
+      expect(document.querySelector('img[alt="Receipt"]')).not.toBeNull()
+    })
+    expect(screen.queryByText('Loading image...')).not.toBeInTheDocument()
+  })
+
+  it('offers a retry when the receipt image fails to load, and recovers without a page reload', async () => {
+    vi.mocked(expensesApi.get).mockResolvedValue(sampleExpenseWithImage)
+    vi.mocked(expensesApi.imageUrl).mockRejectedValue(new Error('network error'))
+    const user = userEvent.setup()
+    renderDetailPage()
+
+    const retryButton = await screen.findByRole(
+      'button',
+      { name: /try again/i },
+      { timeout: 10_000 },
+    )
+    expect(screen.getByText('Failed to load receipt image.')).toBeInTheDocument()
+
+    vi.mocked(expensesApi.imageUrl).mockResolvedValue('blob:mock-url')
+    await user.click(retryButton)
+
+    await waitFor(() => {
+      expect(document.querySelector('img[alt="Receipt"]')).not.toBeNull()
+    })
+    expect(screen.queryByText('Failed to load receipt image.')).not.toBeInTheDocument()
+  }, 15_000)
 })
