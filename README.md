@@ -8,7 +8,7 @@ The React frontend provides a dashboard with spending analytics, a searchable ex
 
 **Live app:** [smart-expense-liard.vercel.app](https://smart-expense-liard.vercel.app)
 
-<video src="https://github.com/user-attachments/assets/6fa6ac64-5fb3-4fd8-b40a-228b294916a9" controls width="100%"></video>
+<video src="https://github.com/user-attachments/assets/4ea77567-1a26-4843-bb3c-7a76475007be" controls width="100%"></video>
 
 ## Features
 
