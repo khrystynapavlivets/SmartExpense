@@ -63,7 +63,7 @@ def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
             payload.refresh_token, settings.SECRET_KEY, algorithms=["HS256"]
         )
         user_id = int(data["sub"])
-    except JWTError, KeyError, ValueError:
+    except (JWTError, KeyError, ValueError):
         raise exc
 
     user = db.query(User).filter(User.id == user_id, User.is_active.is_(True)).first()
