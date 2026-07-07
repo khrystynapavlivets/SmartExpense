@@ -6,6 +6,8 @@ The React frontend provides a dashboard with spending analytics, a searchable ex
 
 ## Demo
 
+**Live app:** [smart-expense-liard.vercel.app](https://smart-expense-liard.vercel.app)
+
 <video src="https://github.com/user-attachments/assets/6fa6ac64-5fb3-4fd8-b40a-228b294916a9" controls width="100%"></video>
 
 ## Features
@@ -26,8 +28,8 @@ The React frontend provides a dashboard with spending analytics, a searchable ex
 | Python 3.14+ | Runtime |
 | FastAPI | Web framework |
 | SQLAlchemy + Alembic | ORM and migrations |
-| PostgreSQL | Database |
-| Groq API | Vision OCR (Llama 4 Scout) and document classification (Llama 3.1 8B) |
+| PostgreSQL (Supabase) | Database — managed Postgres in production, local via Docker Compose in development |
+| Groq API | Vision OCR (`meta-llama/llama-4-scout-17b-16e-instruct`) and document classification (`llama-3.1-8b-instant`) |
 | instructor | Structured output parsing from LLM responses |
 | Pillow | Image processing |
 | Docker Compose | Local database |
@@ -100,6 +102,18 @@ python setup_dataset.py
 
 Requires a Kaggle API token set in `.env`.
 
+## Deployment
+
+The live app runs on:
+
+| | |
+|---|---|
+| [Render](https://render.com) | Backend — Docker Web Service built from the root `Dockerfile`, runs `alembic upgrade head` on every deploy before starting uvicorn |
+| [Supabase](https://supabase.com) | Managed PostgreSQL, accessed via the transaction connection pooler (port 6543) |
+| [Vercel](https://vercel.com) | Frontend — static Vite build, Root Directory `frontend`, SPA routing handled by `frontend/vercel.json` |
+
+Required environment variables per platform are documented in `.env.example` under `[Render (Backend)]` and `[Vercel (Frontend)]`.
+
 ## API Endpoints
 
 **Auth**
@@ -134,7 +148,9 @@ Requires a Kaggle API token set in `.env`.
 | `GROQ_API_KEY` | Groq API key |
 | `SECRET_KEY` | JWT signing secret (use a long random string in production) |
 | `APP_ENV` | `development` or `production` |
+| `ALLOWED_ORIGINS` | Comma-separated list of origins allowed by CORS (e.g. the Vercel frontend URL) |
 | `KAGGLE_API_TOKEN` | Kaggle token for sample dataset download |
+| `VITE_API_URL` | Frontend-only — backend base URL, e.g. the Render service URL. Unset in local dev (uses the Vite proxy) |
 
 ## Running Tests
 
