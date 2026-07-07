@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import { useQueryClient } from '@tanstack/react-query'
 import { authApi, saveTokens } from '../api/auth'
 
 interface FormData {
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const onSubmit = async (data: FormData) => {
     setError('')
@@ -20,6 +22,7 @@ export default function LoginPage() {
     try {
       const tokens = await authApi.login(data.email, data.password)
       saveTokens(tokens)
+      queryClient.clear()
       navigate('/')
     } catch {
       setError('Invalid email or password')

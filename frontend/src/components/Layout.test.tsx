@@ -1,12 +1,19 @@
+import type { ReactElement } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import Layout from './Layout'
 
+function renderWithProviders(ui: ReactElement) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+}
+
 describe('Layout', () => {
   it('renders navigation links and an outlet', () => {
-    render(
+    renderWithProviders(
       <MemoryRouter initialEntries={['/']}>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -26,7 +33,7 @@ describe('Layout', () => {
     localStorage.setItem('refresh_token', 'refresh')
     const user = userEvent.setup()
 
-    render(
+    renderWithProviders(
       <MemoryRouter initialEntries={['/']}>
         <Routes>
           <Route path="/login" element={<div>Login page</div>} />
